@@ -2,12 +2,12 @@
   "manifestVersion": 1,
   "id": "template",
   "name": "SoundBase Plugin Template",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "BUSL-1.1",
   "contract": { "core": "1.0", "modules": { "SpectrumAnalyzer": "1.0" } },
   "runtime": { "type": "node", "entrypoint": "main.js" },
   "deployment": ["managed"],
-  "template": { "name": "soundbase-plugin-template", "version": "1.0.0" },
+  "template": { "name": "soundbase-plugin-template", "version": "0.3.0" },
   "products": [
     {
       "deviceTypeId": "plugin:template/synthetic",
