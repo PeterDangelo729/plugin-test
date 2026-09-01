@@ -1,0 +1,41 @@
+Business Source License 1.1 — SoundBase plugin test fixture
+
+PLACEHOLDER LICENCE for the plugin-test repository. The SoundBase Plugin SDK
+licence (BUSL 1.1, usable only with SoundBase) is being finalised; this file
+exists so the Lab and Desktop licence checks have something to validate.
+
+Business Source License 1.1
+
+Parameters
+
+Licensor:             <<<PLACEHOLDER: licensor legal entity>>>
+
+Licensed Work:        SoundBase Plugin SDK
+                      The Licensed Work is (c) 2026 <<<PLACEHOLDER: licensor legal entity>>>
+
+Additional Use Grant: You may make production use of the Licensed Work only in
+                      connection with SoundBase software.
+
+                      Production use in connection with SoundBase software
+                      includes: developing a plugin that provides devices or
+                      other functionality to SoundBase software; distributing
+                      that plugin, including for a fee; and installing,
+                      operating or offering the operation of that plugin
+                      together with SoundBase software.
+
+                      It does not include using the Licensed Work, in whole or
+                      in part, to provide functionality to, interoperate with,
+                      or form any part of software other than SoundBase
+                      software, nor to develop, operate or offer any product
+                      that serves as a substitute for SoundBase software. Any
+                      such use requires a separate commercial licence from the
+                      Licensor.
+
+Change Date:          <<<PLACEHOLDER: four years after this version is published>>>
+
+Change License:       Apache License, Version 2.0
+
+For information about alternative licensing arrangements for the Licensed
+Work, please contact the Licensor.
+
+-----------------------------------------------------------------------------
