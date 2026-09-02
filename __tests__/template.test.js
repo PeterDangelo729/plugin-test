@@ -25,7 +25,7 @@ const request = async (method, path, body) => {
 test.after(() => handle.close());
 
 test('the manifest is valid and the handshake reports a real port', () => {
-  assert.equal(handle.manifest.id, 'template');
+  assert.equal(handle.manifest.id, 'plugin-test');
   assert.equal(handle.manifest.products[0].deviceTypeId, PRODUCT);
   assert.ok(handle.port > 0);
   assert.equal(HANDSHAKE_PREFIX, 'SB_PLUGIN_READY ');

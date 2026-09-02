@@ -2,7 +2,7 @@
 // a wire protocol, a driver/ beside it) to build a real plugin — main.js, the
 // manifest shape and the shell stay exactly as they are.
 
-export const PRODUCT = 'plugin:template/synthetic';
+export const PRODUCT = 'plugin:plugin-test/synthetic';
 
 const MIN_FREQUENCY_HZ = 100_000;
 const MAX_FREQUENCY_HZ = 6_000_000_000;
