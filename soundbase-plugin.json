@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "plugin-test",
   "name": "Plugin Test",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "BUSL-1.1",
   "contract": { "core": "1.0", "modules": { "SpectrumAnalyzer": "1.0" } },
   "runtime": { "type": "node", "entrypoint": "main.js" },
