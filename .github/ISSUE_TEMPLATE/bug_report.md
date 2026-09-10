@@ -14,7 +14,13 @@ labels: bug
 # the commands you ran
 ```
 
-**Output of `node scripts/smoke.mjs`**
+**Output of `npm run doctor`**
+
+```
+# this covers the setup: Node, the SDK, the manifest, the adapter, the licence
+```
+
+**Output of `npm run smoke`**
 
 ```
 # paste it — this tells us whether the plugin booted and handshaked at all

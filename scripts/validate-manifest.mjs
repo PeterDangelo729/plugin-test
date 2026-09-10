@@ -40,8 +40,9 @@ for (const product of products) {
 // saved projects, so changing it later strands their configured devices.
 if (id === 'template') {
   process.stderr.write(
-    '\nWARNING: the manifest id is still "template". Pick a unique lowercase ' +
-      'id before publishing — it namespaces your deviceTypeIds and is stored ' +
-      "in users' projects, so it cannot be changed painlessly later.\n"
+    '\nWARNING: the manifest id is still "template". Run `npm run rename ' +
+      '<your-id>` before publishing — the id namespaces your deviceTypeIds ' +
+      "and is stored in users' projects, so it cannot be changed painlessly " +
+      'later.\n'
   );
 }

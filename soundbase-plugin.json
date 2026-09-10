@@ -2,24 +2,183 @@
   "manifestVersion": 1,
   "id": "plugin-test",
   "name": "Plugin Test",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "BUSL-1.1",
-  "contract": { "core": "1.0", "modules": { "SpectrumAnalyzer": "1.0" } },
-  "runtime": { "type": "node", "entrypoint": "main.js" },
-  "deployment": ["managed"],
-  "template": { "name": "soundbase-plugin-template", "version": "0.3.0" },
+  "platforms": [
+    "darwin-arm64",
+    "darwin-x64",
+    "win32-x64"
+  ],
+  "repository": "https://github.com/PeterDangelo729/plugin-test",
+  "maintainers": [
+    {
+      "name": "Peter D'Angelo",
+      "email": "peterdangelo729@gmail.com"
+    }
+  ],
+  "contract": {
+    "core": "1.2",
+    "modules": {
+      "SpectrumAnalyzer": "1.0",
+      "ChannelMonitoring": "1.0",
+      "PropertyControl": "1.0"
+    }
+  },
+  "runtime": {
+    "type": "node",
+    "entrypoint": "main.js"
+  },
+  "deployment": [
+    "managed"
+  ],
+  "template": {
+    "name": "soundbase-plugin-template",
+    "version": "1.0.7"
+  },
   "products": [
     {
       "deviceTypeId": "plugin:plugin-test/synthetic",
-      "manufacturer": { "id": "soundbase", "name": "SoundBase" },
+      "manufacturer": {
+        "id": "soundbase",
+        "name": "SoundBase",
+        "logo": {
+          "light": "logos/soundbase-light.svg",
+          "dark": "logos/soundbase-dark.svg"
+        }
+      },
       "model": {
         "id": "synthetic",
         "name": "Synthetic",
         "displayName": "Synthetic Analyzer"
       },
-      "family": { "id": "plugin-test", "name": "Plugin Test" },
-      "capabilities": { "spectrumAnalyzer": true },
-      "traits": { "isSpectrumAnalyzer": true }
+      "family": {
+        "id": "plugin-test",
+        "name": "Plugin Test"
+      },
+      "capabilities": {
+        "spectrumAnalyzer": true
+      },
+      "traits": {
+        "isSpectrumAnalyzer": true
+      }
+    },
+    {
+      "deviceTypeId": "plugin:plugin-test/synthetic-iem",
+      "manufacturer": {
+        "id": "soundbase",
+        "name": "SoundBase",
+        "logo": {
+          "light": "logos/soundbase-light.svg",
+          "dark": "logos/soundbase-dark.svg"
+        }
+      },
+      "model": {
+        "id": "synthetic-iem",
+        "name": "Synthetic IEM",
+        "displayName": "Synthetic Stereo IEM"
+      },
+      "family": {
+        "id": "plugin-test",
+        "name": "Plugin Test"
+      },
+      "capabilities": {
+        "meters": true,
+        "frequency": true,
+        "name": true,
+        "mute": true,
+        "receivers": true
+      },
+      "traits": {
+        "isTransmitter": true,
+        "isIem": true,
+        "isRackDevice": true,
+        "channelCount": 2
+      },
+      "channelName": {
+        "maxLength": 8,
+        "uppercase": true,
+        "allowsSpaces": true,
+        "allowedChars": "^[A-Z0-9 _-]*$"
+      },
+      "layout": {
+        "channel": [
+          {
+            "type": "group",
+            "direction": "row",
+            "children": [
+              {
+                "type": "meter",
+                "bind": "meters.af",
+                "metric": "AUDIO_LEVEL",
+                "label": "L"
+              },
+              {
+                "type": "meter",
+                "bind": "meters.afR",
+                "metric": "AUDIO_LEVEL_RIGHT",
+                "label": "R"
+              }
+            ]
+          },
+          {
+            "type": "value",
+            "bind": "frequency",
+            "format": "frequency",
+            "unit": "MHz"
+          },
+          {
+            "type": "value",
+            "bind": "txPower",
+            "format": "integer",
+            "unit": "mW",
+            "label": "TX"
+          },
+          {
+            "type": "indicator",
+            "bind": "mute",
+            "label": "Mute",
+            "tone": "warning"
+          },
+          {
+            "type": "indicator",
+            "bind": "rfState",
+            "label": "RF",
+            "tone": "success"
+          },
+          {
+            "type": "control",
+            "propertyId": "txPower"
+          }
+        ],
+        "device": [
+          {
+            "type": "text",
+            "text": "Synthetic stereo IEM transmitter"
+          }
+        ],
+        "entities": {
+          "receiver": [
+            {
+              "type": "value",
+              "bind": "name"
+            },
+            {
+              "type": "battery",
+              "bind": "battery"
+            },
+            {
+              "type": "meter",
+              "bind": "meters.rf1",
+              "metric": "RF_LEVEL"
+            },
+            {
+              "type": "meter",
+              "bind": "meters.lqi",
+              "metric": "QUALITY"
+            }
+          ]
+        }
+      }
     }
   ],
   "pluginConfigFields": [
@@ -30,5 +189,18 @@
       "default": 50
     }
   ],
-  "stateKeys": []
+  "stateKeys": [
+    "meters",
+    "frequency",
+    "channelName",
+    "mute",
+    "txPower",
+    "rfState",
+    "receivers",
+    {
+      "key": "x.plugin-test.packLink",
+      "scope": "channel",
+      "op": "merge"
+    }
+  ]
 }

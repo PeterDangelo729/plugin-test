@@ -1,7 +1,9 @@
+![SoundBase Plugin Template — the Lab's signal-flask mark, the SoundBase wordmark, and one real sweep from this plugin's synthetic spectrum](.github/banner.svg)
+
 # SoundBase Plugin Template
 
-A complete, working SoundBase plugin. Clone it, run it, and you have a device
-in SoundBase's live-scan picker within a minute — it serves a synthetic
+A complete, working SoundBase plugin. Press **Use this template**, run it, and
+you have a device in SoundBase's live-scan picker — it serves a synthetic
 spectrum (a noise floor, two carriers, an intermittent transient) so the whole
 path works before you own any hardware.
 
@@ -9,25 +11,32 @@ Then you replace one file.
 
 ```sh
 npm install
+npm run doctor      # is everything wired up?
 npm start
 # SB_PLUGIN_READY {"port":54321}
 # [info] template 0.1.0 listening on 127.0.0.1:54321
 ```
 
 ```sh
-npm test          # the full contract, exercised against your adapter
+npm test            # the contract, exercised against your adapter
+npm run smoke       # boots main.js as a child process, exactly as the host does
 ```
+
+**Never used SoundBase?** Start with
+[docs/soundbase.md](docs/soundbase.md) — what the app is, what the people using
+it are doing, and where your device lands. It is written for someone who will
+never see the SoundBase code.
 
 ## What a plugin is
 
-A plugin is a **network service** that provides devices to SoundBase over a
-versioned HTTP contract. SoundBase spawns it as a child process and supervises
-it — handshake, health, crash-restart, teardown. You write device logic. You
-never write UI, IPC, or HTTP.
+A **network service** that provides devices to SoundBase over a versioned HTTP
+contract. SoundBase spawns it as a child process and supervises it —
+handshake, health, crash-restart, teardown. You write device logic. You never
+write UI, IPC, or HTTP.
 
 ```
 soundbase-plugin.json   your identity, products and config fields
-main.js                 shell bootstrap — copy it verbatim, never edit it
+main.js                 shell bootstrap — copy it verbatim, don't edit it
 adapter.js              your device logic. This is the file you replace.
 driver/                 optional: anything protocol-specific adapter.js uses
 ```
@@ -37,13 +46,36 @@ driver/                 optional: anything protocol-specific adapter.js uses
 lifecycle events, sweep-id bookkeeping, `GET /trace` long-polling, and
 trace-mode accumulation at full sweep rate. Your adapter never sees a request.
 
+## Installing the SDK
+
+```sh
+npm install
+```
+
+That is the whole setup. The two SDK packages are on public npm — nothing else
+to fetch, and no SoundBase checkout required.
+
 ## Making it yours
 
-**1. Edit `soundbase-plugin.json`.** Pick a unique lowercase `id`, then list
-your `products` — each gets a namespaced `deviceTypeId` of the form
-`plugin:<your-id>/<model>`.
+**1. Take an id.**
 
-**2. Replace `adapter.js`.** It exports two things:
+```sh
+npm run rename my-plugin-id -- --name "My Analyzer"
+```
+
+The id appears in four places that must agree — the manifest, every product's
+`deviceTypeId`, `adapter.js`, and the package name. `rename` changes all four.
+Do it before you publish anything: the id is stored in users' saved projects.
+
+**2. Describe your hardware** in `soundbase-plugin.json` — one `products` entry
+per model, plus the config fields SoundBase should render.
+([reference](docs/manifest-reference.md))
+
+**3. Replace `adapter.js`.** It exports `discoverDevices` and one adapter
+factory per module — `createSpectrumAnalyzerAdapter` for a spectrum source,
+`createMonitoringAdapter` for a receiver or IEM transmitter that lands in
+device monitoring. The template ships one synthetic device of each; keep the
+factory your hardware needs:
 
 ```js
 // called while SoundBase is enumerating; return currently reachable devices
@@ -72,10 +104,33 @@ export function createSpectrumAnalyzerAdapter(device, pluginConfig) {
 }
 ```
 
-**3. Keep the tests passing.** `__tests__/` drives your adapter through the
-real shell over real HTTP — configure, sweep, trace geometry, max-hold
-accumulation. They are written against the *contract*, not against the
-synthetic source, so they keep meaning once your adapter talks to hardware.
+```js
+// a monitored device: push state, apply commands, let the state answer
+export function createMonitoringAdapter(device, pluginConfig) {
+  return {
+    async open() {              // connect, then report everything through this.onState
+      this.onState('frequency', { channels: { 1: 518.1 } });
+      return { channelCount: 1, properties: [ /* PropertyControl descriptors */ ] };
+    },
+    async setProperty({ propertyId, channelIndex, value }) { /* apply, then onState */ },
+    async close() {},
+  };
+}
+```
+
+Full reference: [docs/adapter-reference.md](docs/adapter-reference.md).
+
+**4. Keep the tests passing.** `__tests__/` drives your adapter through the
+real shell over real HTTP. They are written against the *contract*, not against
+the synthetic source, so they keep meaning once your adapter talks to hardware.
+
+## A worked example with a real transport
+
+[`examples/network-analyzer/`](examples/network-analyzer/README.md) is a second
+complete plugin — a networked instrument over TCP — showing everything the
+synthetic one skips: discovery by probing, addressing from device config, a
+driver with its own fake, device controls, clamping, and a socket that dies
+mid-sweep. Its tests run with nothing plugged in.
 
 ## Rules that will bite you if you break them
 
@@ -93,6 +148,8 @@ synthetic source, so they keep meaning once your adapter talks to hardware.
   what is actually in force.
 - **`main.js` stays byte-identical.** If you find yourself editing it, the
   thing you want almost certainly belongs in `adapter.js`.
+
+`npm run doctor` checks the ones a machine can check.
 
 ## Device controls — knobs SoundBase has never heard of
 
@@ -117,8 +174,8 @@ hardware you just identified.
 ## Native code, and the gotcha that will cost you a week
 
 If your device needs a native library or a language runtime, read
-[`docs/native-runtimes.md`](docs/native-runtimes.md) before you design
-anything. The short version, learned the hard way on a USRP:
+[docs/native-runtimes.md](docs/native-runtimes.md) before you design anything.
+The short version, learned the hard way on a USRP:
 
 **Put wedge-prone native work in a child process you can kill.** A blocking C
 library that owns a USB device can hang mid-call when someone trips over the
@@ -127,27 +184,35 @@ SoundBase restarts it. If it is in a child, you `SIGKILL` it, report a clean
 device error, and stay healthy. The process boundary between SoundBase and you
 protects *SoundBase*; you need your own boundary to protect *yourself*.
 
-The rest — freezing an interpreter so a user with nothing installed still
-works, why cross-compilation must never execute target binaries, and why a
-signed app bundle means your runtime can never write beside itself — is in that
-document.
+## Documentation
 
-## Running it under SoundBase
+| | |
+|---|---|
+| [soundbase.md](docs/soundbase.md) | The app, the domain, and where your device lands. **Start here.** |
+| [architecture.md](docs/architecture.md) | Process model, lifecycle, supervision, versioning |
+| [getting-started.md](docs/getting-started.md) | Clone to first change, end to end |
+| [adapter-reference.md](docs/adapter-reference.md) | Every adapter method in detail |
+| [manifest-reference.md](docs/manifest-reference.md) | Every manifest field |
+| [http-contract.md](docs/http-contract.md) | The wire, for debugging with `curl` |
+| [testing.md](docs/testing.md) | The three checks, and faking hardware |
+| [running-in-soundbase.md](docs/running-in-soundbase.md) | Install paths, feature flag, logs |
+| [native-runtimes.md](docs/native-runtimes.md) | Native libraries and bundled runtimes |
+| [publishing.md](docs/publishing.md) | Releases, the Lab, licensing |
+| [troubleshooting.md](docs/troubleshooting.md) | Symptom → cause |
+| [glossary.md](docs/glossary.md) | RF and SoundBase vocabulary |
 
-Drop the folder into SoundBase's `userData/plugins/` (or point `SB_PLUGIN_DIRS`
-at a directory containing it), enable the `plugin-system` feature flag, and it
-appears in Settings → Plugins and in the live-scan device picker.
+## Scripts
 
-Standalone, without SoundBase at all:
-
-```sh
-npm start
-curl localhost:<port>/health      # {"ok":true,…}
-curl localhost:<port>/devices
-```
-
-Run by hand it serves the same contract with authentication disabled, which is
-the easy way to poke at it with `curl`.
+| | |
+|---|---|
+| `npm start` | run the plugin |
+| `npm test` | contract tests through the real shell |
+| `npm run doctor` | is this plugin well-formed? with fixes for anything that isn't |
+| `npm run smoke` | boot as a child process, handshake, sweep — what the host does |
+| `npm run manifest` | validate `soundbase-plugin.json` against the contract schema |
+| `npm run rename <id>` | take an id, in all four places it appears |
+| `npm run pack:release` | build the zip users install, and boot-check it |
+| `npm run bump <x.y.z>` | move the version in every file that carries it; tag and push to release |
 
 ## The specification
 
@@ -158,6 +223,8 @@ node_modules/@soundbase/plugin-contract/spec/
   soundbase-plugin.schema.json     validate your manifest against this
   core.openapi.yaml                the core plugin API
   spectrum-analyzer.openapi.yaml   the SpectrumAnalyzer module
+  channel-monitoring.openapi.yaml  the ChannelMonitoring module
+  property-control.openapi.yaml    the PropertyControl module
 ```
 
 They are not a copy that might have gone stale — they ship inside the contract
@@ -186,12 +253,17 @@ Two version numbers that mean different things:
 from different template versions can speak exactly the same contract, and an
 old lineage does not make an incompatible plugin compatible.
 
+**One repository, one plugin.** A release is one zip carrying one
+`soundbase-plugin.json`, and a repository backs exactly one listing on the
+SoundBase Lab — a new version is a new release on that listing, and a second
+plugin needs its own repository.
+
 ## Working with Claude
 
-[`CLAUDE.md`](CLAUDE.md) gives Claude Code the contract invariants, the file
-map, and worked prompts for the common tasks — implementing discovery, adding a
-control, wrapping a native driver. It is worth reading yourself: it is the
-shortest accurate description of the plugin model in this repo.
+[`CLAUDE.md`](CLAUDE.md) gives Claude Code and other coding agents the contract
+invariants, the file map, and worked prompts for the common tasks —
+implementing discovery, adding a control, wrapping a native driver. It is worth
+reading yourself.
 
 ## Licence
 
